@@ -9,7 +9,7 @@ import requests
 from app.version import __version__
 
 # GitHub 仓库地址（发版前需要修改）
-GITHUB_REPO = 'your-username/freight-calculator'
+GITHUB_REPO = 'L-nature20/Freight-Calculator'
 GITHUB_API = f'https://api.github.com/repos/{GITHUB_REPO}/releases/latest'
 
 # 国内代理（加速下载，免费无需注册）
