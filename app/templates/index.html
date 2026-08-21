@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运费试算工具</title>
+    <link href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='vendor/bootstrap-icons.min.css') }}" rel="stylesheet">
+    <link href="/static/css/style.css?v=5" rel="stylesheet">
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="bi bi-truck"></i> 运费试算工具</a>
+            <span class="navbar-text" id="version-badge">
+                <small class="text-white-50">v{{ version }}</small>
+                <button id="check-update-btn" class="btn btn-sm btn-outline-light ms-2" onclick="Update.manualCheck(this);return false">
+                    <i class="bi bi-arrow-repeat"></i> 检查更新
+                </button>
+                <a href="#" id="update-link" style="display:none" class="ms-2 text-warning text-decoration-none" onclick="Update.showModal();return false">
+                    <i class="bi bi-arrow-up-circle"></i> 有新版本
+                </a>
+            </span>
+        </div>
+    </nav>
+
+    <!-- 标签页导航 -->
+    <div class="container-fluid mt-2">
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-trial"><i class="bi bi-calculator"></i> 运费试算</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-delivery"><i class="bi bi-file-earmark-text"></i> 交货单管理</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-ltl"><i class="bi bi-check2-square"></i> 零担审批</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-contract"><i class="bi bi-file-earmark-lock"></i> 合同管理</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-config"><i class="bi bi-gear"></i> 基础配置</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-help"><i class="bi bi-question-circle"></i> 帮助</a></li>
+        </ul>
+
+        <div class="tab-content mt-2">
+
+            <!-- ==================== 运费试算 ==================== -->
+            <div class="tab-pane fade show active" id="tab-trial">
+                <div class="card mb-3">
+                    <div class="card-header"><b>试算条件</b></div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-md-2">
+                                <label class="form-label">交货单号</label>
+                                <input type="text" class="form-control form-control-sm" id="trial-delivery-no" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">运单号</label>
+                                <input type="text" class="form-control form-control-sm" id="trial-waybill-no" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">拼车单号</label>
+                                <input type="text" class="form-control form-control-sm" id="trial-consolidated-no" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">发货过账日期(起)</label>
+                                <input type="date" class="form-control form-control-sm" id="trial-date-start" min="1900-01-01" max="2099-12-31">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">发货过账日期(止)</label>
+                                <input type="date" class="form-control form-control-sm" id="trial-date-end" min="1900-01-01" max="2099-12-31">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">承运商</label>
+                                <input type="text" class="form-control form-control-sm" id="trial-carrier-name" placeholder="模糊">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">承运商编码</label>
+                                <input type="text" class="form-control form-control-sm" id="trial-carrier-code" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">合同编码</label>
+                                <input type="text" class="form-control form-control-sm" id="trial-contract-code" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">结果状态</label>
+                                <select class="form-select form-select-sm" id="trial-result-status">
+                                    <option value="全部">全部</option>
+                                    <option value="已匹配">已匹配</option>
+                                    <option value="无法匹配">无法匹配</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button class="btn btn-primary btn-sm me-1" id="trial-calc-btn" onclick="Trial.calculate()"><i class="bi bi-play"></i> 试算</button>
+                                <button class="btn btn-success btn-sm me-1" id="trial-export-btn" onclick="Trial.exportResults()"><i class="bi bi-download"></i> 导出</button>
+                                <button class="btn btn-secondary btn-sm" onclick="Trial.clearConditions()"><i class="bi bi-eraser"></i> 清空</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><b>试算结果</b> <span id="trial-total" class="badge bg-info"></span></span>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm me-1" onclick="Trial.showColumnModal()"><i class="bi bi-layout-three-columns"></i> 自定义列</button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 65vh; overflow: auto;">
+                            <table class="table table-bordered table-sm table-hover" id="trial-table">
+                                <thead class="table-light sticky-top"><tr id="trial-thead"></tr></thead>
+                                <tbody id="trial-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <span id="trial-page-info" class="text-muted small"></span>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm" style="width:auto" onchange="Trial.perPage=parseInt(this.value);Trial.page=1;Trial.loadPage()">
+                                <option value="20">20条/页</option>
+                                <option value="50" selected>50条/页</option>
+                                <option value="100">100条/页</option>
+                                <option value="200">200条/页</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="Trial.prevPage()">上一页</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="Trial.nextPage()">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 交货单管理 ==================== -->
+            <div class="tab-pane fade" id="tab-delivery">
+                <div class="card mb-3">
+                    <div class="card-header"><b>查询条件</b></div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-md-2">
+                                <label class="form-label">交货单号</label>
+                                <input type="text" class="form-control form-control-sm" id="delivery-search-no" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">拼车单号</label>
+                                <input type="text" class="form-control form-control-sm" id="delivery-search-consolidated" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">运单号</label>
+                                <input type="text" class="form-control form-control-sm" id="delivery-search-waybill" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">发货日期(起)</label>
+                                <input type="date" class="form-control form-control-sm" id="delivery-search-date-start" min="1900-01-01" max="2099-12-31">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">发货日期(止)</label>
+                                <input type="date" class="form-control form-control-sm" id="delivery-search-date-end" min="1900-01-01" max="2099-12-31">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">承运商</label>
+                                <input type="text" class="form-control form-control-sm" id="delivery-search-carrier" placeholder="模糊">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">承运商编码</label>
+                                <input type="text" class="form-control form-control-sm" id="delivery-search-carrier-code" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">货物类型</label>
+                                <input type="text" class="form-control form-control-sm" id="delivery-search-cargo" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">运输方式</label>
+                                <input type="text" class="form-control form-control-sm" id="delivery-search-transport-mode" placeholder="精确">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button class="btn btn-primary btn-sm me-1" onclick="Delivery.search()"><i class="bi bi-search"></i> 查询</button>
+                                <button class="btn btn-secondary btn-sm" onclick="Delivery.clearSearch()"><i class="bi bi-eraser"></i> 清空</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <button class="btn btn-primary btn-sm me-1" onclick="Delivery.showAddModal()"><i class="bi bi-plus"></i> 新增</button>
+                            <button class="btn btn-success btn-sm me-1" onclick="document.getElementById('delivery-import-file').click()"><i class="bi bi-upload"></i> 导入</button>
+                            <a href="/api/delivery/template" class="btn btn-info btn-sm me-1"><i class="bi bi-file-earmark-arrow-down"></i> 模板</a>
+                            <button class="btn btn-danger btn-sm" id="delivery-batch-delete-btn" onclick="Delivery.batchDelete()"><i class="bi bi-trash"></i> 批量删除</button>
+                            <input type="file" id="delivery-import-file" accept=".xlsx" style="display:none" onchange="Delivery.importFile(this)">
+                        </div>
+                    </div>
+                    <div class="batch-toolbar" id="delivery-toolbar">
+                        <label class="batch-select-all"><input type="checkbox" onchange="Delivery.toggleAll(this)"> <span>全选</span></label>
+                        <span class="batch-count" id="delivery-selected-count">已选 0 项</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height:70vh">
+                            <table class="table table-bordered table-sm table-hover" id="delivery-table">
+                                <thead class="table-light sticky-top"><tr id="delivery-thead"></tr></thead>
+                                <tbody id="delivery-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <span id="delivery-page-info" class="text-muted small"></span>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm" style="width:auto" onchange="Delivery.perPage=parseInt(this.value);Delivery.page=1;Delivery.loadPage()">
+                                <option value="20">20条/页</option>
+                                <option value="50" selected>50条/页</option>
+                                <option value="100">100条/页</option>
+                                <option value="200">200条/页</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="Delivery.prevPage()">上一页</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="Delivery.nextPage()">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 零担审批 ==================== -->
+            <div class="tab-pane fade" id="tab-ltl">
+                <div class="card mb-3">
+                    <div class="card-header"><b>查询条件</b></div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-md-2">
+                                <label class="form-label">交货单号</label>
+                                <input type="text" class="form-control form-control-sm" id="ltl-search-delivery-no" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">零担车次</label>
+                                <input type="text" class="form-control form-control-sm" id="ltl-search-vehicle-no" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">零担类型</label>
+                                <select class="form-select form-select-sm" id="ltl-search-type">
+                                    <option value="">全部</option>
+                                    <option value="支线">支线</option>
+                                    <option value="干线">干线</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">审批月份</label>
+                                <input type="month" class="form-control form-control-sm" id="ltl-search-month">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button class="btn btn-primary btn-sm me-1" onclick="Ltl.search()"><i class="bi bi-search"></i> 查询</button>
+                                <button class="btn btn-secondary btn-sm" onclick="Ltl.clearSearch()"><i class="bi bi-eraser"></i> 清空</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <button class="btn btn-primary btn-sm me-1" onclick="Ltl.showAddModal()"><i class="bi bi-plus"></i> 新增</button>
+                            <button class="btn btn-success btn-sm me-1" onclick="document.getElementById('ltl-import-file').click()"><i class="bi bi-upload"></i> 导入</button>
+                            <a href="/api/ltl-approval/template" class="btn btn-info btn-sm me-1"><i class="bi bi-file-earmark-arrow-down"></i> 模板</a>
+                            <button class="btn btn-danger btn-sm" id="ltl-batch-delete-btn" onclick="Ltl.batchDelete()"><i class="bi bi-trash"></i> 批量删除</button>
+                            <input type="file" id="ltl-import-file" accept=".xlsx" style="display:none" onchange="Ltl.importFile(this)">
+                        </div>
+                    </div>
+                    <div class="batch-toolbar" id="ltl-toolbar">
+                        <label class="batch-select-all"><input type="checkbox" onchange="Ltl.toggleAll(this)"> <span>全选</span></label>
+                        <span class="batch-count" id="ltl-selected-count">已选 0 项</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height:70vh">
+                            <table class="table table-bordered table-sm table-hover" id="ltl-table">
+                                <thead class="table-light sticky-top"><tr id="ltl-thead"></tr></thead>
+                                <tbody id="ltl-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <span id="ltl-page-info" class="text-muted small"></span>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm" style="width:auto" onchange="Ltl.perPage=parseInt(this.value);Ltl.page=1;Ltl.loadPage()">
+                                <option value="20">20条/页</option>
+                                <option value="50" selected>50条/页</option>
+                                <option value="100">100条/页</option>
+                                <option value="200">200条/页</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="Ltl.prevPage()">上一页</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="Ltl.nextPage()">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 合同管理 ==================== -->
+            <div class="tab-pane fade" id="tab-contract">
+                <ul class="nav nav-pills mb-2" id="contractSubTabs">
+                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#sub-contract">合同列表</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#sub-rates">费率明细</a></li>
+                </ul>
+                <div class="tab-content">
+                <div class="tab-pane fade show active" id="sub-contract">
+                <div class="row">
+                    <!-- 合同列表（窄列） -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-file-earmark-lock me-1"></i> <b>合同列表</b></span>
+                                <div class="input-group" style="width:200px">
+                                    <input type="text" class="form-control form-control-sm" id="contract-search" placeholder="搜索合同..." onkeyup="if(event.key==='Enter'){Contract.selectedIds.clear();Contract.page=1;Contract.loadPage()}">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="Contract.selectedIds.clear();Contract.page=1;Contract.loadPage()"><i class="bi bi-search"></i></button>
+                                    <button class="btn-help" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="合同检索条件" data-bs-content="<ul><li>合同编码（模糊）</li><li>合同名称（模糊）</li><li>承运商名称（模糊）</li><li>承运商编码（模糊）</li></ul>" data-bs-html="true" tabindex="0">?</button>
+                                </div>
+                            </div>
+                            <div class="batch-toolbar" id="contract-toolbar" style="justify-content:space-between">
+                                <div>
+                                    <label class="batch-select-all"><input type="checkbox" onchange="Contract.toggleAll(this)"> <span>全选</span></label>
+                                    <span class="batch-count" id="contract-selected-count">已选 0 项</span>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary btn-sm me-1" onclick="Contract.showAddModal()"><i class="bi bi-plus"></i> 新增</button>
+                                    <button class="btn btn-success btn-sm me-1" onclick="document.getElementById('contract-import-file').click()"><i class="bi bi-upload"></i> 导入</button>
+                                    <a href="/api/contract/template" class="btn btn-info btn-sm me-1"><i class="bi bi-file-earmark-arrow-down"></i> 模板</a>
+                                    <input type="file" id="contract-import-file" accept=".xlsx" style="display:none" onchange="Contract.importFile(this)">
+                                    <button class="btn btn-success btn-sm" id="contract-batch-activate-btn" onclick="Contract.batchActivate()"><i class="bi bi-check-circle"></i> 生效</button>
+                                    <button class="btn btn-warning btn-sm" id="contract-batch-invalidate-btn" onclick="Contract.batchInvalidate()"><i class="bi bi-pause-circle"></i> 失效</button>
+                                    <button class="btn btn-outline-danger btn-sm" id="contract-batch-void-btn" onclick="Contract.batchVoid()"><i class="bi bi-x-circle"></i> 作废</button>
+                                    <button class="btn btn-danger btn-sm" id="contract-batch-delete-btn" onclick="Contract.batchDelete()"><i class="bi bi-trash"></i> 删除</button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height:60vh">
+                                    <table class="table table-bordered table-sm table-hover" id="contract-table">
+                                        <thead class="table-light sticky-top"><tr id="contract-thead"></tr></thead>
+                                        <tbody id="contract-tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between align-items-center">
+                                <span id="contract-page-info" class="text-muted small"></span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <select class="form-select form-select-sm" style="width:auto" onchange="Contract.perPage=parseInt(this.value);Contract.page=1;Contract.loadPage()">
+                                        <option value="20">20条/页</option>
+                                        <option value="50" selected>50条/页</option>
+                                        <option value="100">100条/页</option>
+                                        <option value="200">200条/页</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="Contract.prevPage()">上一页</button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="Contract.nextPage()">下一页</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 费率详情（宽列） -->
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-list-ul me-1"></i> <b>费率详情</b> <span id="rate-contract-name" class="text-muted small ms-1"></span></span>
+                                <div class="input-group" style="width:200px">
+                                    <input type="text" class="form-control form-control-sm" id="rate-search" placeholder="搜索线路/装运点/区域..." onkeyup="if(event.key==='Enter'){Contract.ratePage=1;Contract.loadRates(Contract.selectedContractId)}">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="Contract.ratePage=1;Contract.loadRates(Contract.selectedContractId)"><i class="bi bi-search"></i></button>
+                                    <button class="btn-help" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="费率检索条件" data-bs-content="<ul><li>线路代码（模糊）</li><li>装运点描述（模糊）</li><li>运输区域描述（模糊）</li></ul>" data-bs-html="true" tabindex="0">?</button>
+                                </div>
+                            </div>
+                            <div class="batch-toolbar" id="rate-toolbar" style="display:none;justify-content:space-between">
+                                <div>
+                                    <label class="batch-select-all"><input type="checkbox" onchange="Contract.toggleAllRates(this)"> <span>全选</span></label>
+                                    <span class="batch-count" id="rate-selected-count">已选 0 项</span>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary btn-sm me-1" id="btn-add-rate" style="display:none" onclick="Contract.showAddRateModal()"><i class="bi bi-plus"></i> 新增费率</button>
+                                    <button class="btn btn-success btn-sm me-1" id="btn-import-rate" style="display:none" onclick="document.getElementById('rate-import-file').click()"><i class="bi bi-upload"></i> 导入费率</button>
+                                    <a href="/api/contract/rate-template" class="btn btn-info btn-sm me-1"><i class="bi bi-file-earmark-arrow-down"></i> 费率模板</a>
+                                    <input type="file" id="rate-import-file" accept=".xlsx" style="display:none" onchange="Contract.importRateFile(this)">
+                                    <button class="btn btn-danger btn-sm" id="rate-batch-delete-btn" onclick="Contract.batchDeleteRate()"><i class="bi bi-trash"></i> 删除</button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height:65vh">
+                                    <table class="table table-bordered table-sm table-hover" id="rate-table">
+                                        <thead class="table-light sticky-top"><tr id="rate-thead"></tr></thead>
+                                        <tbody id="rate-tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between align-items-center">
+                                <span id="rate-page-info" class="text-muted small"></span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <select class="form-select form-select-sm" style="width:auto" onchange="Contract.perPage=parseInt(this.value);Contract.ratePage=1;Contract.loadRates(Contract.selectedContractId)">
+                                        <option value="20">20条/页</option>
+                                        <option value="50" selected>50条/页</option>
+                                        <option value="100">100条/页</option>
+                                        <option value="200">200条/页</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="Contract.ratePrevPage()">上一页</button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="Contract.rateNextPage()">下一页</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div><!-- end sub-contract -->
+
+            <!-- ===== 费率明细（独立列表） ===== -->
+            <div class="tab-pane fade" id="sub-rates">
+                <div class="card mb-3">
+                    <div class="card-header"><b>查询条件</b></div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-md-2">
+                                <label class="form-label">合同编码</label>
+                                <input type="text" class="form-control form-control-sm" id="allrates-search-contract" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">承运商名称</label>
+                                <input type="text" class="form-control form-control-sm" id="allrates-search-carrier" placeholder="模糊">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">装运点</label>
+                                <input type="text" class="form-control form-control-sm" id="allrates-search-shipping" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">运输区域</label>
+                                <input type="text" class="form-control form-control-sm" id="allrates-search-area" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">货物类型</label>
+                                <input type="text" class="form-control form-control-sm" id="allrates-search-cargo" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">线路类型</label>
+                                <input type="text" class="form-control form-control-sm" id="allrates-search-route-type" placeholder="精确">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">运输方式</label>
+                                <input type="text" class="form-control form-control-sm" id="allrates-search-transport-mode" placeholder="精确">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button class="btn btn-primary btn-sm me-1" onclick="Contract.searchAllRates()"><i class="bi bi-search"></i> 搜索</button>
+                                <button class="btn btn-secondary btn-sm" onclick="Contract.clearAllRatesSearch()"><i class="bi bi-eraser"></i> 清空</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <b>费率明细</b>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height:70vh">
+                            <table class="table table-bordered table-sm table-hover" id="allrates-table">
+                                <thead class="table-light sticky-top"><tr id="allrates-thead"></tr></thead>
+                                <tbody id="allrates-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <span id="allrates-page-info" class="text-muted small"></span>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm" style="width:auto" onchange="Contract.perPage=parseInt(this.value);Contract.allRatesPage=1;Contract.loadAllRates()">
+                                <option value="20">20条/页</option>
+                                <option value="50" selected>50条/页</option>
+                                <option value="100">100条/页</option>
+                                <option value="200">200条/页</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="Contract.allRatesPrevPage()">上一页</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="Contract.allRatesNextPage()">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            </div><!-- end contract tab-content -->
+
+            <!-- ==================== 基础配置 ==================== -->
+            <div class="tab-pane fade" id="tab-config">
+                <div class="container-fluid">
+                    <!-- 1. 泡货体积重量折算系数 -->
+                    <div class="config-section">
+                        <h6 class="d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-box"></i> 泡货体积重量折算系数</span>
+                            <button class="btn btn-primary btn-sm" onclick="Config.saveCoefficient()"><i class="bi bi-check-lg"></i> 保存</button>
+                        </h6>
+                        <div class="row align-items-end g-2">
+                            <div class="col-md-5">
+                                <label class="form-label">当前系数</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="config-coefficient" step="0.01" min="0.01">
+                                    <span class="input-group-text">m³/吨</span>
+                                </div>
+                                <div class="form-text mt-1">默认值 3.5，即 1 m³ ≈ 0.286 吨。修改后立即生效。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. 整车唯一标识 -->
+                    <div class="config-section">
+                        <h6 class="d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-truck"></i> 整车唯一标识</span>
+                            <button class="btn btn-primary btn-sm" onclick="Config.saveTruckFields()"><i class="bi bi-check-lg"></i> 保存</button>
+                        </h6>
+                        <div class="mb-2">
+                            <label class="form-label">选择用于分组的字段（可多选）</label>
+                            <div id="truck-fields-selector" class="border rounded p-2" style="background:var(--ink-50)"></div>
+                        </div>
+                        <div class="form-text mt-2">选中字段值用 "-" 连接组成唯一标识，相同标识的交货单归为同一车次</div>
+                    </div>
+
+                    <!-- 3. 坎级区间 -->
+                    <div class="config-section">
+                        <h6 class="d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-bar-steps"></i> 坎级区间</span>
+                            <div>
+                                <button class="btn btn-primary btn-sm me-1" onclick="Config.showAddTierModal()"><i class="bi bi-plus"></i> 新增</button>
+                                <button class="btn btn-outline-warning btn-sm" onclick="Config.validateTiers()"><i class="bi bi-patch-check"></i> 校验</button>
+                            </div>
+                        </h6>
+                        <div class="table-responsive" style="border:none">
+                            <table class="table table-hover table-sm" id="tier-table">
+                                <thead><tr>
+                                    <th style="width:30%">坎级名称</th>
+                                    <th style="width:15%">序数</th>
+                                    <th style="width:25%">下限</th>
+                                    <th style="width:25%">上限</th>
+                                    <th style="width:5%"></th>
+                                </tr></thead>
+                                <tbody id="tier-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 帮助 ==================== -->
+            <div class="tab-pane" id="tab-help">
+                <div class="d-flex" style="gap:0; width:100%;">
+                    <!-- 左侧目录 -->
+                    <div class="help-sidebar">
+                        <div class="help-sidebar-title"><i class="bi bi-journal-text"></i> 操作指引</div>
+                        <ul class="help-toc">
+                            <li><a href="#" onclick="Help.showSection('help-overview',this);return false" class="active"><i class="bi bi-rocket-takeoff"></i> 快速开始</a></li>
+                            <li><a href="#" onclick="Help.showSection('help-config',this);return false"><i class="bi bi-gear"></i> 1. 基础配置</a></li>
+                            <li><a href="#" onclick="Help.showSection('help-contract',this);return false"><i class="bi bi-file-earmark-lock"></i> 2. 合同与费率</a></li>
+                            <li><a href="#" onclick="Help.showSection('help-delivery',this);return false"><i class="bi bi-file-earmark-text"></i> 3. 交货单导入</a></li>
+                            <li><a href="#" onclick="Help.showSection('help-ltl',this);return false"><i class="bi bi-check2-square"></i> 4. 零担审批</a></li>
+                            <li><a href="#" onclick="Help.showSection('help-trial',this);return false"><i class="bi bi-calculator"></i> 5. 运费试算</a></li>
+                        </ul>
+                    </div>
+                    <!-- 右侧内容 -->
+                    <div class="help-content">
+                        <div id="help-overview" class="help-section-card">
+                            <h6><i class="bi bi-rocket-takeoff"></i>快速开始</h6>
+                            <p>本系统用于物流运费的试算与核对。按照以下 5 步顺序操作即可完成运费试算：</p>
+                            <div class="d-flex align-items-center gap-2 flex-wrap my-3">
+                                <span class="help-step-badge"><i class="bi bi-gear"></i> 基础配置</span>
+                                <i class="bi bi-arrow-right text-muted"></i>
+                                <span class="help-step-badge"><i class="bi bi-file-earmark-lock"></i> 合同与费率</span>
+                                <i class="bi bi-arrow-right text-muted"></i>
+                                <span class="help-step-badge"><i class="bi bi-file-earmark-text"></i> 交货单导入</span>
+                                <i class="bi bi-arrow-right text-muted"></i>
+                                <span class="help-step-badge"><i class="bi bi-check2-square"></i> 零担审批</span>
+                                <i class="bi bi-arrow-right text-muted"></i>
+                                <span class="help-step-badge"><i class="bi bi-calculator"></i> 运费试算</span>
+                            </div>
+                            <p class="mb-0 small text-muted">点击左侧目录可快速跳转到对应章节。</p>
+                        </div>
+
+                        <div id="help-config" class="help-section-card" style="display:none">
+                            <h6><i class="bi bi-gear"></i>1. 基础配置</h6>
+                            <p>在进行任何试算之前，需要先完成三项基础配置。进入 <b>基础配置</b> 标签页操作。</p>
+
+                            <p><b>① 泡货体积重量折算系数</b></p>
+                            <ul>
+                                <li>默认值 <b>3.5 m³/吨</b>，即 1 吨货物占 3.5 立方米空间时视为"泡货"。</li>
+                                <li>当交货单体积÷重量 &gt; 系数时，系统按 <b>体积÷系数</b> 计算"体积重量"作为计费重量。</li>
+                                <li>根据实际物流标准调整，修改后保存立即生效。</li>
+                            </ul>
+
+                            <p><b>② 整车唯一标识</b></p>
+                            <ul>
+                                <li>选择用于将交货单归组为同一"车次"的字段（可多选，如"车牌号"、"拼车单号"等）。</li>
+                                <li>选中字段的值用 "-" 连接后作为唯一标识，相同标识的交货单归为同一车次。</li>
+                                <li>正确配置此项是车次级坎级计价的前提。</li>
+                            </ul>
+
+                            <p><b> 坎级区间</b></p>
+                            <ul>
+                                <li>定义重量分段（如 0-5吨、5-10吨、10吨以上），每个坎级有对应的单价。</li>
+                                <li>坎级必须 <b>连续覆盖</b>：无间隙（上一级上限 = 下一级下限）、无重叠。</li>
+                                <li>点击 <b>校验</b> 按钮可检查当前坎级配置是否有问题。</li>
+                            </ul>
+                            <div class="help-note"><i class="bi bi-exclamation-triangle"></i> 坎级配置错误将导致试算异常，请务必在校验通过后再进行试算。</div>
+                        </div>
+
+                        <div id="help-contract" class="help-section-card" style="display:none">
+                            <h6><i class="bi bi-file-earmark-lock"></i>2. 合同与费率</h6>
+                            <p>合同是运费试算的核心数据源，每条合同关联一组费率。进入 <b>合同管理</b> 标签页操作。</p>
+
+                            <p><b>合同创建与导入</b></p>
+                            <ul>
+                                <li><b>新增</b>：手动填写合同编码、名称、承运商、有效期等信息。</li>
+                                <li><b>导入</b>：下载模板，填写后批量导入。支持 Excel (.xlsx) 格式。</li>
+                                <li>合同状态生命周期：<b>草稿</b> → <b>生效</b> → <b>失效</b>，也可标记为 <b>作废</b>。</li>
+                                <li>只有"生效"状态的合同才会参与试算匹配。</li>
+                            </ul>
+
+                            <p><b>费率导入</b></p>
+                            <ul>
+                                <li>选中合同后，在右侧"费率详情"区域导入费率数据。</li>
+                                <li>费率按 <b>线路 + 货物类型 + 运输方式</b> 匹配交货单。</li>
+                                <li>每条费率包含多个坎级的单价（坎级1单价、坎级2单价…），以及 <b>末端装卸费</b>。</li>
+                                <li>路线代码由系统自动生成（装运点+运输区域组合），无需手动填写。</li>
+                                <li><b>税率</b>填写小数形式（如 0.09 表示 9%），不能超过 1。</li>
+                            </ul>
+                            <div class="help-note help-note-info"><i class="bi bi-info-circle"></i> 合同检索支持按合同编码、合同名称、承运商名称/编码进行模糊搜索。</div>
+                        </div>
+
+                        <div id="help-delivery" class="help-section-card" style="display:none">
+                            <h6><i class="bi bi-file-earmark-text"></i>3. 交货单导入</h6>
+                            <p>交货单是试算的输入数据，来源于 SAP 系统导出。进入 <b>交货单管理</b> 标签页操作。</p>
+
+                            <p><b>模板字段说明</b></p>
+                            <table class="table help-field-table table-sm">
+                                <thead><tr><th>字段名</th><th>说明</th></tr></thead>
+                                <tbody>
+                                    <tr><td>交货单号</td><td>SAP 交货单编号，唯一标识</td></tr>
+                                    <tr><td>装运点 / 装运点描述</td><td>发货地点编码及名称</td></tr>
+                                    <tr><td>运输区域 / 运输区域描述</td><td>目的地编码及名称</td></tr>
+                                    <tr><td>总重量（吨）/ 总体积（m³）</td><td>本交货单的重量和体积</td></tr>
+                                    <tr><td>拼车单号 / 运单号</td><td>物流调度编号</td></tr>
+                                    <tr><td>发货过账日期</td><td>SAP 过账日期，用于日期范围筛选</td></tr>
+                                    <tr><td>车牌号</td><td>运输车辆车牌</td></tr>
+                                    <tr><td>销售组织 / 组织名称</td><td>发货方组织信息</td></tr>
+                                    <tr><td>承运商名称 / 承运商编码</td><td>承运物流公司，用于匹配合同</td></tr>
+                                    <tr><td>送达方名称 / 送达方编码</td><td>收货方信息</td></tr>
+                                    <tr><td>货物类型 / 运输方式</td><td>货物分类及运输方式，用于匹配费率</td></tr>
+                                </tbody>
+                            </table>
+
+                            <p><b>导入与去重</b></p>
+                            <ul>
+                                <li>下载模板填写后，点击"导入"按钮上传 Excel 文件。</li>
+                                <li>如果交货单号已存在，系统弹窗询问：<b>跳过</b>（保留原数据）或 <b>覆盖</b>（用新数据替换）。</li>
+                                <li>支持批量选择后删除不需要的记录。</li>
+                            </ul>
+                        </div>
+
+                        <div id="help-ltl" class="help-section-card" style="display:none">
+                            <h6><i class="bi bi-check2-square"></i>4. 零担审批</h6>
+                            <p>零担（LTL）指一车装载多个交货单的运输方式。零担审批记录用于将运费分摊到各个交货单。进入 <b>零担审批</b> 标签页操作。</p>
+
+                            <p><b>操作步骤</b></p>
+                            <ul>
+                                <li><b>新增</b>：填写零担类型（支线/干线）、车序号、交货单号、审批月份（YYYYMM 格式）。</li>
+                                <li><b>导入</b>：下载模板批量导入零担审批数据。</li>
+                                <li>系统根据零担审批记录关联交货单号，在试算时自动计算各交货单应分摊的车次运费。</li>
+                            </ul>
+
+                            <p><b>查询与筛选</b></p>
+                            <ul>
+                                <li>支持按交货单号、零担车次、零担类型（支线/干线）、审批月份进行筛选。</li>
+                                <li>支持批量选择后删除。</li>
+                            </ul>
+                            <div class="help-note"><i class="bi bi-exclamation-triangle"></i> 零担审批数据必须在试算前完成录入，否则相关交货单将无法正确计算分摊运费。</div>
+                        </div>
+
+                        <div id="help-trial" class="help-section-card" style="display:none">
+                            <h6><i class="bi bi-calculator"></i>5. 运费试算</h6>
+                            <p>所有基础数据准备完毕后，即可进行运费试算。进入 <b>运费试算</b> 标签页操作。</p>
+
+                            <p><b>查询条件</b></p>
+                            <ul>
+                                <li><b>交货单号 / 运单号 / 拼车单号</b>：精确匹配。</li>
+                                <li><b>发货过账日期</b>：选择起止日期范围，默认最近一个月。</li>
+                                <li><b>承运商</b>：支持模糊搜索；<b>承运商编码 / 合同编码</b>：精确匹配。</li>
+                                <li><b>结果状态</b>：筛选"已匹配"或"无法匹配"的试算结果。</li>
+                            </ul>
+
+                            <p><b>试算结果</b></p>
+                            <ul>
+                                <li>试算结果包含 <b>51 列</b>详细数据，涵盖交货单信息、车次分组、坎级匹配、运费计算等。</li>
+                                <li><b>自定义列</b>：点击"自定义列"按钮，可拖拽调整列顺序、固定左侧/右侧、隐藏不需要的列。</li>
+                                <li><b>排序</b>：点击表头可按该列排序。</li>
+                                <li><b>翻页</b>：支持切换每页显示条数（20/50/100/200）。</li>
+                                <li><b>导出</b>：将全部试算结果导出为 Excel 文件。</li>
+                            </ul>
+
+                            <p><b>异常标记说明</b></p>
+                            <table class="table help-field-table table-sm">
+                                <thead><tr><th>异常标记</th><th>含义</th></tr></thead>
+                                <tbody>
+                                    <tr><td>承运商无合同</td><td>该承运商在系统中没有对应的合同记录</td></tr>
+                                    <tr><td>合同已过期</td><td>承运商有合同，但在发货日期时合同已失效</td></tr>
+                                    <tr><td>线路无费率</td><td>合同中未找到匹配的线路+货物类型+运输方式组合</td></tr>
+                                    <tr><td>货物类型无费率</td><td>合同中未找到该货物类型对应的费率</td></tr>
+                                    <tr><td>超出坎级范围</td><td>车次总重量超出所有坎级区间的上限</td></tr>
+                                    <tr><td>落档无数据</td><td>无法确定落档坎级，通常是坎级配置不连续</td></tr>
+                                </tbody>
+                            </table>
+                            <div class="help-note"><i class="bi bi-lightbulb"></i> 异常标记会以 <span class="exception-text">红色斜体</span> 显示在试算结果表格中，悬停可查看详细说明。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== 通用弹窗区域 ==================== -->
+
+    <!-- 交货单编辑弹窗 -->
+    <div class="modal fade" id="deliveryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="delivery-modal-title">新增交货单</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="delivery-form"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button class="btn btn-primary" onclick="Delivery.save()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 零担审批编辑弹窗 -->
+    <div class="modal fade" id="ltlModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ltl-modal-title">新增零担审批</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="form-label">零担类型</label>
+                        <select class="form-select" id="ltl-type"><option value="支线">支线</option><option value="干线">干线</option></select>
+                    </div>
+                    <div class="mb-2"><label class="form-label">车序号</label><input type="text" class="form-control" id="ltl-vehicle-seq"></div>
+                    <div class="mb-2"><label class="form-label">交货单号</label><input type="text" class="form-control" id="ltl-delivery-no"></div>
+                    <div class="mb-2"><label class="form-label">零担审批月份</label><input type="text" class="form-control" id="ltl-month" placeholder="YYYYMM"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button class="btn btn-primary" onclick="Ltl.save()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重复交货单选择弹窗 -->
+    <div class="modal fade" id="duplicateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="duplicateModalTitle">重复项处理</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="duplicateModalDesc">导入文件中存在已有记录，请选择处理方式：</p>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="dup-mode" id="dup-skip" value="skip" checked>
+                        <label class="form-check-label" for="dup-skip"><b>跳过</b> — 保留已有数据，跳过重复行</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="dup-mode" id="dup-overwrite" value="overwrite">
+                        <label class="form-check-label" for="dup-overwrite"><b>覆盖</b> — 用导入数据覆盖已有数据</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button class="btn btn-primary" id="duplicateModalConfirm" onclick="window._dupConfirmCallback()">
+                        <span class="spinner-border spinner-border-sm d-none" id="dupImportSpinner"></span>
+                        确认导入
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 试算列自定义弹窗 -->
+    <div class="modal fade" id="columnModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">自定义列</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>固定在左侧</h6>
+                            <div class="border rounded p-2 mb-2" id="pin-left-list" style="min-height:60px;max-height:50vh;overflow:auto"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>显示列</h6>
+                            <div class="border rounded p-2 mb-2" id="visible-list" style="min-height:200px;max-height:50vh;overflow:auto"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>固定在右侧</h6>
+                            <div class="border rounded p-2 mb-2" id="pin-right-list" style="min-height:60px;max-height:30vh;overflow:auto"></div>
+                            <hr>
+                            <h6>隐藏列</h6>
+                            <div class="border rounded p-2" id="hidden-list" style="min-height:60px;max-height:30vh;overflow:auto"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" onclick="Trial.resetColumns()">恢复默认</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button class="btn btn-primary" onclick="Trial.applyColumns()">应用</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 合同编辑弹窗 -->
+    <div class="modal fade" id="contractModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contract-modal-title">新增合同</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="contract-form"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button class="btn btn-primary" onclick="Contract.save()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 费率编辑弹窗 -->
+    <div class="modal fade" id="rateModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">新增费率</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="rate-form"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button class="btn btn-primary" onclick="Contract.saveRate()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 坎级编辑弹窗 -->
+    <div class="modal fade" id="tierModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tier-modal-title">新增坎级</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="form-label">坎级名称</label><input type="text" class="form-control" id="tier-name"></div>
+                    <div class="mb-2"><label class="form-label">坎级序数</label><input type="number" class="form-control" id="tier-order" min="1"></div>
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <label class="form-label">下限</label>
+                            <div class="input-group">
+                                <select class="form-select" id="tier-lower-op" style="max-width:70px"><option value="true">≥</option><option value="false">＞</option></select>
+                                <input type="number" class="form-control" id="tier-lower-val" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">上限</label>
+                            <div class="input-group">
+                                <select class="form-select" id="tier-upper-op" style="max-width:70px"><option value="false">＜</option><option value="true">≤</option></select>
+                                <input type="number" class="form-control" id="tier-upper-val" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button class="btn btn-primary" onclick="Config.saveTier()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入结果弹窗 -->
+    <div class="modal fade" id="importResultModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">导入结果</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="import-result-body"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 试算 tooltip -->
+    <div id="trial-cell-tooltip" class="trial-tooltip"></div>
+
+    <!-- 更新弹窗 -->
+    <div class="modal fade" id="updateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title"><i class="bi bi-arrow-up-circle text-success"></i> 发现新版本</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>最新版本: <strong id="update-version"></strong></p>
+                    <div id="update-notes" class="small text-muted mb-3"></div>
+                    <div id="update-progress" style="display:none">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" id="update-bar" style="width:0%"></div>
+                        </div>
+                        <small class="text-muted" id="update-status">正在下载...</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" id="manual-download-btn" target="_blank" class="btn btn-outline-secondary btn-sm" style="display:none">
+                        <i class="bi bi-box-arrow-up-right"></i> 手动下载
+                    </a>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">稍后再说</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="update-btn" onclick="Update.apply()">
+                        <i class="bi bi-download"></i> 立即更新
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='vendor/bootstrap.bundle.min.js') }}"></script>
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/delivery.js"></script>
+    <script src="/static/js/ltl_approval.js"></script>
+    <script src="/static/js/contract.js"></script>
+    <script src="/static/js/trial.js"></script>
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/help.js?v=2"></script>
+</body>
+</html>

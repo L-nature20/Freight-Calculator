@@ -1,0 +1,45 @@
+name: Build Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build exe
+        run: python build.py
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 运费试算工具 v${{ github.ref_name }}
+          body: |
+            ## 更新内容
+
+            请下载 `运费试算工具.exe`，替换旧版本即可。
+
+            启动后会自动检查新版本。
+          files: |
+            dist/运费试算工具.exe
+            dist/version.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

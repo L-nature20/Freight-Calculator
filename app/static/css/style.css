@@ -1,0 +1,622 @@
+/* ═══════════════════════════════════════════════
+   运费试算工具 - 视觉样式
+   ═══════════════════════════════════════════════ */
+
+:root {
+    --brand-50: #eff6ff;
+    --brand-100: #dbeafe;
+    --brand-500: #3b82f6;
+    --brand-600: #2563eb;
+    --brand-700: #1d4ed8;
+    --ink-50: #f8fafc;
+    --ink-100: #f1f5f9;
+    --ink-200: #e2e8f0;
+    --ink-300: #cbd5e1;
+    --ink-400: #94a3b8;
+    --ink-500: #64748b;
+    --ink-600: #475569;
+    --ink-700: #334155;
+    --ink-800: #1e293b;
+    --success-50: #ecfdf5; --success-600: #059669; --success-700: #047857;
+    --warning-50: #fffbeb; --warning-600: #d97706;
+    --danger-50: #fef2f2;  --danger-500: #ef4444; --danger-600: #dc2626;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    background: #f5f7fa;
+    color: var(--ink-800);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── 顶部导航 ── */
+.navbar {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.2);
+    padding: 0.6rem 1rem;
+}
+.navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    font-size: 1.05rem;
+}
+.navbar-brand i { margin-right: 6px; }
+
+/* ── 标签页 ── */
+.nav-tabs {
+    border-bottom: 1px solid var(--ink-200);
+    gap: 2px;
+}
+.nav-tabs .nav-link {
+    color: var(--ink-500);
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.6rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.15s;
+    background: transparent;
+    border-radius: 6px 6px 0 0;
+}
+.nav-tabs .nav-link:hover {
+    color: var(--brand-600);
+    background: var(--brand-50);
+}
+.nav-tabs .nav-link.active {
+    color: var(--brand-600);
+    border-bottom-color: var(--brand-600);
+    background: transparent;
+}
+.nav-tabs .nav-link i { margin-right: 4px; }
+
+.nav-pills .nav-link {
+    font-size: 0.85rem;
+    color: var(--ink-600);
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+}
+.nav-pills .nav-link.active {
+    background: var(--brand-500);
+    color: #fff;
+}
+
+/* ── 卡片 ── */
+.card {
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    background: #fff;
+}
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid var(--ink-100);
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: var(--ink-700);
+    font-size: 0.9rem;
+}
+.card-footer {
+    background: var(--ink-50);
+    border-top: 1px solid var(--ink-100);
+    padding: 0.5rem 1rem;
+}
+
+/* ── 按钮 ── */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.4rem 0.9rem;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid transparent;
+}
+.btn i { font-size: 0.9em; }
+.btn-sm { padding: 0.3rem 0.65rem; font-size: 0.8rem; }
+.btn-xs { padding: 0.15rem 0.4rem; font-size: 0.75rem; }
+
+.btn-primary {
+    background: var(--brand-500);
+    border-color: var(--brand-500);
+    box-shadow: 0 1px 2px rgba(59,130,246,0.2);
+}
+.btn-primary:hover { background: var(--brand-600); border-color: var(--brand-600); }
+.btn-success {
+    background: var(--success-600);
+    border-color: var(--success-600);
+    box-shadow: 0 1px 2px rgba(5,150,105,0.2);
+}
+.btn-success:hover { background: var(--success-700); border-color: var(--success-700); }
+.btn-danger {
+    background: var(--danger-500);
+    border-color: var(--danger-500);
+    box-shadow: 0 1px 2px rgba(239,68,68,0.2);
+}
+.btn-danger:hover { background: var(--danger-600); border-color: var(--danger-600); }
+.btn-warning { background: var(--warning-600); border-color: var(--warning-600); color: #fff; }
+.btn-warning:hover { background: #b45309; border-color: #b45309; color: #fff; }
+
+.btn-outline-primary { color: var(--brand-600); border-color: var(--brand-100); background: #fff; }
+.btn-outline-primary:hover { background: var(--brand-50); border-color: var(--brand-500); color: var(--brand-700); }
+.btn-outline-success { color: var(--success-600); border-color: #a7f3d0; background: #fff; }
+.btn-outline-success:hover { background: var(--success-50); border-color: var(--success-600); }
+.btn-outline-warning { color: var(--warning-600); border-color: #fde68a; background: #fff; }
+.btn-outline-warning:hover { background: var(--warning-50); border-color: var(--warning-600); }
+.btn-outline-danger { color: var(--danger-500); border-color: #fecaca; background: #fff; }
+.btn-outline-danger:hover { background: var(--danger-50); border-color: var(--danger-500); }
+.btn-outline-secondary { color: var(--ink-500); border-color: var(--ink-200); background: #fff; }
+.btn-outline-secondary:hover { background: var(--ink-50); border-color: var(--ink-400); color: var(--ink-700); }
+
+/* 按钮组内间距 */
+.card-header .btn + .btn { margin-left: 0.25rem; }
+
+/* ── 表单 ── */
+.form-control, .form-select {
+    border: 1px solid var(--ink-200);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    padding: 0.4rem 0.7rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+.form-control-sm, .form-select-sm { font-size: 0.8125rem; }
+.form-control-sm { padding: 0.3rem 0.6rem; }
+.form-select-sm { padding: 0.3rem 2rem 0.3rem 0.6rem; }
+.form-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ink-600);
+    margin-bottom: 3px;
+    letter-spacing: 0.2px;
+}
+
+/* ── 表格 ── */
+.table {
+    font-size: 0.85rem;
+    margin-bottom: 0;
+}
+.table th {
+    background: var(--ink-50);
+    color: var(--ink-600);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: none;
+    border-bottom: 1px solid var(--ink-200);
+    padding: 0.55rem 0.7rem;
+    letter-spacing: 0.2px;
+}
+.table td {
+    padding: 0.45rem 0.7rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--ink-100);
+    color: var(--ink-700);
+}
+.table-hover tbody tr:hover { background: var(--brand-50); }
+.table thead th { position: sticky; top: 0; z-index: 2; box-shadow: 0 1px 0 var(--ink-200); }
+.table-responsive { border: 1px solid var(--ink-200); border-radius: 8px; background: #fff; }
+.table td .btn { white-space: nowrap; }
+
+/* 可点击行 */
+tr.clickable-row { cursor: pointer; transition: background 0.1s; }
+tr.clickable-row:hover { background: var(--brand-50) !important; }
+tr.selected-row { background: #dbeafe !important; box-shadow: inset 3px 0 0 var(--brand-500); }
+tr.selected-row td { color: var(--ink-800); }
+
+/* 异常文本 */
+.exception-text {
+    color: var(--danger-500);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 0.82rem;
+}
+
+/* ── 状态徽章 ── */
+.status-badge {
+    display: inline-block;
+    padding: 0.2em 0.7em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
+}
+.status-draft   { background: var(--ink-100); color: var(--ink-600); }
+.status-active  { background: var(--success-50); color: var(--success-700); border: 1px solid #a7f3d0; }
+.status-expired { background: var(--warning-50); color: var(--warning-600); border: 1px solid #fde68a; }
+.status-void    { background: var(--danger-50); color: var(--danger-600); border: 1px solid #fecaca; }
+
+/* ── 合同状态统计卡片 ── */
+.contract-stat-card {
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 70px;
+    color: #fff;
+    font-size: 0.78rem;
+}
+.contract-stat-card .num { font-size: 1.1rem; font-weight: 700; line-height: 1.2; }
+.contract-stat-card .label { opacity: 0.9; }
+.stat-draft   { background: var(--ink-400); }
+.stat-active  { background: var(--success-600); }
+.stat-expired { background: var(--warning-600); }
+.stat-void    { background: var(--danger-500); }
+.stat-total   { background: var(--brand-600); }
+
+/* ── 弹窗 ── */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+}
+.modal-header {
+    border-bottom: 1px solid var(--ink-100);
+    padding: 0.9rem 1.25rem;
+}
+.modal-title { font-weight: 600; font-size: 1rem; color: var(--ink-800); }
+.modal-body { padding: 1.25rem; }
+.modal-footer { border-top: 1px solid var(--ink-100); padding: 0.75rem 1.25rem; }
+.modal-backdrop.show { opacity: 0.4; }
+
+/* ── 气泡（popover） ── */
+.popover {
+    border: 1px solid var(--ink-200);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+.popover-header {
+    background: var(--ink-50);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-700);
+    border-bottom: 1px solid var(--ink-100);
+    padding: 0.4rem 0.75rem;
+}
+.popover-body {
+    font-size: 0.8rem;
+    color: var(--ink-600);
+    padding: 0.5rem 0.75rem;
+}
+.popover-body ul { padding-left: 1.2rem; margin: 0; }
+.popover-body li { margin-bottom: 2px; }
+.btn-help {
+    background: var(--ink-50);
+    border: 1px solid var(--ink-200);
+    color: var(--ink-500);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.btn-help:hover {
+    background: var(--brand-50);
+    border-color: var(--brand-500);
+    color: var(--brand-600);
+}
+
+/* ── 基础配置区块 ── */
+.config-section {
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+.config-section h6 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink-800);
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--ink-100);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.config-section h6 i { color: var(--brand-500); }
+
+/* ── 分页信息 ── */
+.card-footer .text-muted { font-size: 0.8rem; }
+
+/* ── 告警 ── */
+.alert {
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    padding: 0.7rem 1rem;
+}
+
+/* ── 滚动条 ── */
+.table-responsive::-webkit-scrollbar { height: 8px; width: 8px; }
+.table-responsive::-webkit-scrollbar-thumb { background: var(--ink-300); border-radius: 4px; }
+.table-responsive::-webkit-scrollbar-thumb:hover { background: var(--ink-400); }
+
+/* ── 列自定义弹窗中的小卡片 ── */
+#columnModal .border.rounded {
+    background: var(--ink-50);
+    border-color: var(--ink-200) !important;
+    border-radius: 8px !important;
+    padding: 0.5rem !important;
+}
+#columnModal h6 { font-size: 0.8rem; color: var(--ink-600); font-weight: 600; margin-bottom: 0.5rem; }
+
+/* ── 小工具 ── */
+.text-muted { color: var(--ink-500) !important; }
+.badge.bg-info { background: var(--brand-500) !important; font-weight: 500; }
+
+/* ── 表单字段在弹窗中 ── */
+.modal-body .form-label { font-size: 0.78rem; }
+.modal-body .mb-2 { margin-bottom: 0.6rem !important; }
+
+/* ── 批量操作工具栏 ── */
+.batch-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--ink-50);
+    border-bottom: 1px solid var(--ink-100);
+    flex-wrap: wrap;
+}
+.batch-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+    color: var(--ink-600);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    user-select: none;
+}
+.batch-select-all:hover { background: var(--ink-100); }
+.batch-select-all input { cursor: pointer; }
+.batch-count {
+    font-size: 0.8rem;
+    color: var(--brand-600);
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    background: var(--brand-50);
+    border-radius: 999px;
+    min-width: 70px;
+    text-align: center;
+}
+.batch-toolbar .btn { padding: 0.25rem 0.6rem; font-size: 0.78rem; }
+
+/* ── 行选择 checkbox ── */
+.row-checkbox { width: 16px; height: 16px; cursor: pointer; }
+
+/* ── 响应式优化 ── */
+@media (max-width: 992px) {
+    .nav-tabs .nav-link { padding: 0.5rem 0.7rem; font-size: 0.82rem; }
+}
+
+/* ── 费率详情表优化 ─ */
+#rate-table {
+    font-size: 0.78rem;
+    table-layout: fixed;
+}
+/* 表头允许换行 */
+#rate-table th {
+    white-space: normal;
+    word-break: break-word;
+    padding: 0.4rem 0.6rem;
+}
+/* 数据单元格允许换行 */
+#rate-table td {
+    white-space: normal;
+    word-break: break-word;
+    padding: 0.3rem 0.5rem;
+}
+/* 操作列自然宽度 */
+#rate-table th:last-child,
+#rate-table td:last-child {
+    width: 60px;
+}
+
+/* ── 试算结果表优化 ── */
+#trial-table th,
+#trial-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* 试算 tooltip */
+.trial-tooltip {
+    position: fixed;
+    z-index: 99999;
+    background: #212529;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    max-width: 500px;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    line-height: 1.5;
+    word-break: break-all;
+    white-space: normal;
+    display: none;
+}
+
+
+/* ═══════════════════════════════════════════════
+   帮助模块 — 左右布局
+   ═══════════════════════════════════════════════ */
+
+/* 帮助标签页全宽、无顶部留白 */
+#tab-help {
+    padding: 0 !important;
+    margin-top: 0 !important;
+}
+#tab-help > div {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* 左侧目录 */
+.help-sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    padding: 1rem 0;
+    height: fit-content;
+    position: sticky;
+    top: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-top: 0;
+}
+.help-sidebar-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-700);
+    padding: 0 1rem 0.75rem;
+    border-bottom: 1px solid var(--ink-100);
+    margin-bottom: 0.5rem;
+}
+.help-sidebar-title i { color: var(--brand-500); margin-right: 4px; }
+
+.help-toc {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.help-toc li a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+    color: var(--ink-600);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+}
+.help-toc li a:hover {
+    background: var(--brand-50);
+    color: var(--brand-600);
+    border-left-color: var(--brand-300);
+}
+.help-toc li a.active {
+    background: var(--brand-50);
+    color: var(--brand-700);
+    font-weight: 600;
+    border-left-color: var(--brand-500);
+}
+.help-toc li a i {
+    font-size: 0.9rem;
+    width: 18px;
+    text-align: center;
+    color: var(--ink-400);
+}
+.help-toc li a:hover i,
+.help-toc li a.active i {
+    color: var(--brand-500);
+}
+
+/* 右侧内容区 */
+.help-content {
+    flex: 1;
+    margin-left: 1rem;
+    min-width: 0;
+    padding-top: 0;
+}
+.help-content .help-section-card:first-child {
+    margin-top: 0;
+}
+
+/* 章节卡片 */
+.help-section-card {
+    border-left: 3px solid var(--brand-500);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.help-section-card h6 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink-800);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--ink-100);
+}
+.help-section-card h6 i {
+    color: var(--brand-500);
+    margin-right: 6px;
+}
+.help-section-card p,
+.help-section-card li {
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: var(--ink-700);
+}
+.help-section-card ul {
+    padding-left: 1.2rem;
+}
+.help-section-card li {
+    margin-bottom: 0.3rem;
+}
+
+/* 步骤标签 */
+.help-step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.35rem 0.8rem;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-200);
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--brand-700);
+    white-space: nowrap;
+}
+.help-step-badge i { color: var(--brand-500); }
+
+/* 注意事项 */
+.help-note {
+    background: var(--warning-50);
+    border-left: 3px solid var(--warning-600);
+    border-radius: 0 6px 6px 0;
+    padding: 0.5rem 0.8rem;
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    color: var(--ink-700);
+}
+.help-note i { color: var(--warning-600); margin-right: 4px; }
+.help-note-info { background: var(--brand-50); border-left-color: var(--brand-500); }
+.help-note-info i { color: var(--brand-500); }
+
+/* 字段说明表 */
+.help-field-table { font-size: 0.85rem; margin: 0.5rem 0; }
+.help-field-table th {
+    background: var(--ink-50);
+    color: var(--ink-600);
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 0.4rem 0.6rem;
+    white-space: nowrap;
+}
+.help-field-table td { padding: 0.35rem 0.6rem; vertical-align: top; }
+.help-field-table td:first-child {
+    font-weight: 500;
+    color: var(--ink-800);
+    white-space: nowrap;
+}
+
+/* ── 更新检查旋转动画 ── */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
