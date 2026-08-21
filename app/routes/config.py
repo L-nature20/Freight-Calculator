@@ -1,4 +1,6 @@
 """基础配置路由"""
+import os
+import sys
 from flask import Blueprint, request, jsonify
 from ..models import db, AppConfig, TierInterval, VolumetricCoefficient
 
@@ -185,3 +187,14 @@ def add_coefficient():
         db.session.add(AppConfig(key='volumetric_coefficient', value=str(val)))
     db.session.commit()
     return jsonify(new_coeff.to_dict()), 201
+
+
+# ─────────────────────────────────────────
+#  退出应用
+# ─────────────────────────────────────────
+@bp.route('/shutdown', methods=['POST'])
+def api_shutdown():
+    """退出应用（仅打包模式）"""
+    if not getattr(sys, 'frozen', False):
+        return jsonify({'success': False, 'error': '开发模式不支持退出'})
+    os._exit(0)

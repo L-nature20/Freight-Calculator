@@ -26,6 +26,7 @@ a = Analysis(
         'app.engine.matcher',
         'app.engine.exceptions',
         'app.updater',
+        'tkinter',
     ],
     hookspath=[],
     hooksconfig={},

@@ -214,6 +214,16 @@ const Update = {
     },
 };
 
+// ── 应用控制 ──
+const App = {
+    shutdown() {
+        if (!confirm('确定要退出运费试算工具吗？')) return;
+        fetch('/api/config/shutdown', { method: 'POST' })
+            .then(() => { window.close(); })
+            .catch(() => { window.close(); });
+    },
+};
+
 // ── 页面初始化 ──
 document.addEventListener('DOMContentLoaded', () => {
     Config.loadAll();
