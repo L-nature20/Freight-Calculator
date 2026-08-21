@@ -8,6 +8,9 @@ import subprocess
 import hashlib
 import json
 
+# 强制 UTF-8 输出，避免 Windows cp1252 编码报错
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 # 确保项目根目录在 path 中
 sys.path.insert(0, os.path.dirname(__file__))
 
