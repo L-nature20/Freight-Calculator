@@ -31,7 +31,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: 运费试算工具 v${{ github.ref_name }}
+          name: Freight Calculator v${{ github.ref_name }}
           body: |
             ## 更新内容
 
