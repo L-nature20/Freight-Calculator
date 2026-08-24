@@ -5,6 +5,7 @@ import traceback
 import ctypes
 import threading
 import time
+import socket
 
 # 错误日志路径：exe 同级目录
 if getattr(sys, 'frozen', False):
@@ -39,6 +40,12 @@ def _setup_console():
     ci.size = ctypes.sizeof(ci)
     ci.visible = 0
     kernel32.SetConsoleCursorInfo(kernel32.GetStdHandle(-11), ctypes.byref(ci))
+
+
+def _is_port_in_use(port):
+    """检测端口是否已被占用"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
 
 
 def _show_error(msg):
@@ -87,6 +94,16 @@ try:
     app = create_app()
 
     if __name__ == '__main__':
+        # 检测端口是否已被占用（防止重复启动）
+        if _is_port_in_use(5000):
+            print()
+            print(f'  {YELLOW}应用已在运行中{RESET}')
+            print(f'  {DIM}正在打开浏览器...{RESET}')
+            print()
+            webbrowser.open('http://127.0.0.1:5000')
+            time.sleep(2)
+            sys.exit(0)
+
         def open_browser():
             """1.5秒后自动打开浏览器"""
             time.sleep(1.5)
