@@ -218,9 +218,15 @@ const Update = {
 const App = {
     shutdown() {
         if (!confirm('确定要退出运费试算工具吗？')) return;
-        fetch('/api/config/shutdown', { method: 'POST' })
-            .then(() => { window.close(); })
-            .catch(() => { window.close(); });
+        // pywebview 模式：调用 Python 的 shutdown 方法关闭窗口
+        if (window.pywebview && window.pywebview.api) {
+            window.pywebview.api.shutdown();
+        } else {
+            // 开发模式（浏览器）：调用 HTTP 接口
+            fetch('/api/config/shutdown', { method: 'POST' })
+                .then(() => { window.close(); })
+                .catch(() => { window.close(); });
+        }
     },
 };
 

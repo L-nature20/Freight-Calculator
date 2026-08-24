@@ -26,6 +26,11 @@ a = Analysis(
         'app.engine.matcher',
         'app.engine.exceptions',
         'app.updater',
+        # pywebview
+        'webview',
+        'webview.platforms.edgechromium',
+        'clr_loader',
+        'pythonnet',
     ],
     hookspath=[],
     hooksconfig={},
@@ -53,7 +58,7 @@ exe = EXE(
     upx=False,  # UPX 会导致启动崩溃
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,  # 美化后的控制台窗口，关闭即退出
+    console=False,  # 无控制台窗口，原生桌面应用
     disable_windowed_traceback=False,
     target_arch=None,
     codesign_identity=None,

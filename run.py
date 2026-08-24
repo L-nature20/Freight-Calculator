@@ -1,11 +1,12 @@
 """运费试算工具 - 启动入口"""
 import os
 import sys
-import traceback
+import socket
 import ctypes
 import threading
 import time
-import socket
+import traceback
+import webbrowser
 
 # 错误日志路径：exe 同级目录
 if getattr(sys, 'frozen', False):
@@ -39,48 +40,73 @@ def _is_port_in_use(port):
 
 
 try:
-    import webbrowser
     from app import create_app
 
-    app = create_app()
-
     if __name__ == '__main__':
-        def open_browser():
-            """1.5秒后自动打开浏览器"""
-            time.sleep(1.5)
-            webbrowser.open('http://127.0.0.1:5000')
-
         if getattr(sys, 'frozen', False):
-            # 检测端口占用：重复启动时直接打开浏览器
+            # ── 打包模式：pywebview 原生桌面窗口 ──
+
+            # 重复启动检测
             if _is_port_in_use(5000):
-                print('应用已在运行中，正在打开浏览器...')
-                webbrowser.open('http://127.0.0.1:5000')
-                time.sleep(2)
-                sys.exit(0)
-
-            # 打包模式：控制台显示 3 秒后完全隐藏
-            threading.Thread(target=open_browser, daemon=True).start()
-            print('运费试算工具 v1.0.0')
-            print('访问地址: http://127.0.0.1:5000')
-            print('浏览器将自动打开...')
-            print('关闭当前窗口即退出应用')
-            print('=' * 40)
-
-            def _hide_console():
-                time.sleep(3)
                 try:
-                    hwnd = ctypes.windll.kernel32.GetConsoleWindow()
-                    if hwnd:
-                        ctypes.windll.user32.ShowWindow(hwnd, 0)  # SW_HIDE
+                    ctypes.windll.user32.MessageBoxW(
+                        0,
+                        '应用已在运行中。\n\n如需重启，请先关闭已有实例。',
+                        '运费试算工具',
+                        0x40,  # MB_ICONINFORMATION
+                    )
                 except Exception:
                     pass
-            threading.Thread(target=_hide_console, daemon=True).start()
+                sys.exit(0)
 
-            app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+            # 后台启动 Flask
+            app = create_app()
+            threading.Thread(
+                target=lambda: app.run(
+                    host='127.0.0.1', port=5000,
+                    debug=False, use_reloader=False,
+                ),
+                daemon=True,
+            ).start()
+
+            # 等待 Flask 就绪（最多 30 秒）
+            for _ in range(30):
+                if _is_port_in_use(5000):
+                    break
+                time.sleep(1)
+
+            # 创建原生桌面窗口
+            import webview
+
+            class _Api:
+                """供前端 JS 调用的 Python 方法"""
+                def shutdown(self):
+                    window.destroy()
+
+            window = webview.create_window(
+                '运费试算工具',
+                'http://127.0.0.1:5000',
+                width=1280,
+                height=800,
+                min_size=(800, 600),
+                js_api=_Api(),
+            )
+            webview.start()
+
+            # 窗口关闭后退出进程
+            os._exit(0)
+
         else:
+            # ── 开发模式：浏览器方式 ──
+            app = create_app()
+
+            def open_browser():
+                time.sleep(1.5)
+                webbrowser.open('http://127.0.0.1:5000')
+
             threading.Thread(target=open_browser, daemon=True).start()
             print('=' * 50)
-            print('  运费试算工具已启动')
+            print('  运费试算工具已启动（开发模式）')
             print('  访问地址: http://127.0.0.1:5000')
             print('  按 Ctrl+C 停止服务')
             print('=' * 50)

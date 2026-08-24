@@ -4,3 +4,4 @@ Flask-CORS==4.0.0
 openpyxl==3.1.2
 APScheduler==3.10.4
 requests==2.31.0
+pywebview==5.3.2
