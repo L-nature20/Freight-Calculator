@@ -22,8 +22,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
+          pip install --no-cache-dir -r requirements.txt
+          pip install --no-cache-dir pyinstaller
+          # 验证关键依赖
+          python -c "import webview; print('webview OK:', webview.__file__)" || exit 1
+          python -c "import clr; print('pythonnet OK:', clr.__file__)" || exit 1
 
       - name: Build exe
         run: python build.py
