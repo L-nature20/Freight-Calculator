@@ -93,10 +93,21 @@ try:
             webbrowser.open('http://127.0.0.1:5000')
 
         if getattr(sys, 'frozen', False):
-            # 打包模式：美化控制台窗口
+            # 打包模式：控制台显示 3 秒后完全隐藏
             _setup_console()
             _print_banner()
             threading.Thread(target=open_browser, daemon=True).start()
+
+            def _hide_console():
+                time.sleep(3)
+                try:
+                    hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+                    if hwnd:
+                        ctypes.windll.user32.ShowWindow(hwnd, 0)  # SW_HIDE
+                except Exception:
+                    pass
+            threading.Thread(target=_hide_console, daemon=True).start()
+
             app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
         else:
             threading.Thread(target=open_browser, daemon=True).start()
