@@ -14,39 +14,6 @@ else:
     LOG_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE = os.path.join(LOG_DIR, 'error.log')
 
-# ANSI 颜色码
-GREEN = '\033[92m'
-CYAN = '\033[96m'
-YELLOW = '\033[93m'
-DIM = '\033[90m'
-BOLD = '\033[1m'
-RESET = '\033[0m'
-
-
-def _setup_console():
-    """美化控制台窗口：标题、颜色、隐藏光标"""
-    kernel32 = ctypes.windll.kernel32
-
-    # 启用 ANSI 颜色
-    kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 0x0004)
-
-    # 设置窗口标题
-    kernel32.SetConsoleTitleW('运费试算工具')
-
-    # 隐藏光标
-    class _CursorInfo(ctypes.Structure):
-        _fields_ = [('size', ctypes.c_int), ('visible', ctypes.c_byte)]
-    ci = _CursorInfo()
-    ci.size = ctypes.sizeof(ci)
-    ci.visible = 0
-    kernel32.SetConsoleCursorInfo(kernel32.GetStdHandle(-11), ctypes.byref(ci))
-
-
-def _is_port_in_use(port):
-    """检测端口是否已被占用"""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('127.0.0.1', port)) == 0
-
 
 def _show_error(msg):
     """用 Windows 弹窗显示错误"""
@@ -65,26 +32,10 @@ def _log_error(exc):
         pass
 
 
-def _print_banner():
-    """打印启动画面"""
-    lines = [
-        '',
-        f'  {GREEN}{BOLD}╔══════════════════════════════╗{RESET}',
-        f'  {GREEN}{BOLD}║                              ║{RESET}',
-        f'  {GREEN}{BOLD}║  {RESET}{BOLD}运费试算工具{RESET}{GREEN}{BOLD}               ║{RESET}',
-        f'  {GREEN}{BOLD}║  {RESET}{DIM}Freight Calculator v1.0.0{RESET}{GREEN}{BOLD}  ║{RESET}',
-        f'  {GREEN}{BOLD}║                              ║{RESET}',
-        f'  {GREEN}{BOLD}╚══════════════════════════════╝{RESET}',
-        '',
-        f'  {CYAN}●{RESET} 服务地址: {BOLD}http://127.0.0.1:5000{RESET}',
-        f'  {YELLOW}●{RESET} 浏览器将自动打开...',
-        '',
-        f'  {DIM}关闭当前窗口即退出应用{RESET}',
-        f'  {DIM}' + '─' * 40 + f'{RESET}',
-        '',
-    ]
-    for line in lines:
-        print(line)
+def _is_port_in_use(port):
+    """检测端口是否已被占用"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
 
 
 try:
@@ -94,26 +45,26 @@ try:
     app = create_app()
 
     if __name__ == '__main__':
-        # 检测端口是否已被占用（防止重复启动）
-        if _is_port_in_use(5000):
-            print()
-            print(f'  {YELLOW}应用已在运行中{RESET}')
-            print(f'  {DIM}正在打开浏览器...{RESET}')
-            print()
-            webbrowser.open('http://127.0.0.1:5000')
-            time.sleep(2)
-            sys.exit(0)
-
         def open_browser():
             """1.5秒后自动打开浏览器"""
             time.sleep(1.5)
             webbrowser.open('http://127.0.0.1:5000')
 
         if getattr(sys, 'frozen', False):
+            # 检测端口占用：重复启动时直接打开浏览器
+            if _is_port_in_use(5000):
+                print('应用已在运行中，正在打开浏览器...')
+                webbrowser.open('http://127.0.0.1:5000')
+                time.sleep(2)
+                sys.exit(0)
+
             # 打包模式：控制台显示 3 秒后完全隐藏
-            _setup_console()
-            _print_banner()
             threading.Thread(target=open_browser, daemon=True).start()
+            print('运费试算工具 v1.0.0')
+            print('访问地址: http://127.0.0.1:5000')
+            print('浏览器将自动打开...')
+            print('关闭当前窗口即退出应用')
+            print('=' * 40)
 
             def _hide_console():
                 time.sleep(3)
@@ -128,7 +79,11 @@ try:
             app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
         else:
             threading.Thread(target=open_browser, daemon=True).start()
-            _print_banner()
+            print('=' * 50)
+            print('  运费试算工具已启动')
+            print('  访问地址: http://127.0.0.1:5000')
+            print('  按 Ctrl+C 停止服务')
+            print('=' * 50)
             app.run(host='127.0.0.1', port=5000, debug=False)
 
 except Exception:
