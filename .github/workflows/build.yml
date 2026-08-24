@@ -48,7 +48,7 @@ jobs:
 
             启动后会自动检查新版本。
           files: |
-            dist/运费试算工具.exe
+            dist/FreightCalculator.exe
             dist/version.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

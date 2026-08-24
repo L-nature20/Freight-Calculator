@@ -1,6 +1,6 @@
 """一键构建发布包
 用法: python build.py
-输出: dist/运费试算工具.exe + dist/version.json
+输出: dist/FreightCalculator.exe + dist/version.json
 """
 import os
 import sys
@@ -59,10 +59,15 @@ def main():
         sys.exit(1)
 
     # 3. Calculate exe hash
-    exe_path = os.path.join('dist', '运费试算工具.exe')
+    exe_path = os.path.join('dist', 'FreightCalculator.exe')
     if not os.path.exists(exe_path):
-        print(f'[Build] Output not found: {exe_path}')
-        sys.exit(1)
+        # 也检查中文名（兼容旧构建）
+        alt_path = os.path.join('dist', '运费试算工具.exe')
+        if os.path.exists(alt_path):
+            exe_path = alt_path
+        else:
+            print(f'[Build] Output not found: {exe_path}')
+            sys.exit(1)
 
     file_hash = hashlib.sha256(open(exe_path, 'rb').read()).hexdigest()
     size_mb = os.path.getsize(exe_path) / 1024 / 1024
@@ -71,7 +76,7 @@ def main():
     version_info = {
         'version': __version__,
         'sha256': file_hash,
-        'filename': '运费试算工具.exe',
+        'filename': os.path.basename(exe_path),
     }
     version_path = os.path.join('dist', 'version.json')
     with open(version_path, 'w', encoding='utf-8') as f:

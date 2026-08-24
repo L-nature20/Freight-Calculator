@@ -6,18 +6,24 @@ from PyInstaller.utils.hooks import collect_all
 
 block_cipher = None
 
-# 收集 pywebview + clr_loader 的全部文件（解决 CI 打包遗漏问题）
+# 收集 pywebview + pythonnet + clr_loader 的全部文件（含 .NET 运行时 DLL）
 _webview_datas, _webview_binaries, _webview_hiddenimports = collect_all('webview')
+_pythonnet_datas, _pythonnet_binaries, _pythonnet_hiddenimports = collect_all('pythonnet')
 _clr_datas, _clr_binaries, _clr_hiddenimports = collect_all('clr_loader')
+
+# 诊断：打印收集结果
+print(f'[Spec] webview: {len(_webview_datas)} datas, {len(_webview_binaries)} binaries, {len(_webview_hiddenimports)} hiddenimports')
+print(f'[Spec] pythonnet: {len(_pythonnet_datas)} datas, {len(_pythonnet_binaries)} binaries, {len(_pythonnet_hiddenimports)} hiddenimports')
+print(f'[Spec] clr_loader: {len(_clr_datas)} datas, {len(_clr_binaries)} binaries, {len(_clr_hiddenimports)} hiddenimports')
 
 a = Analysis(
     ['run.py'],
     pathex=[],
-    binaries=_webview_binaries + _clr_binaries,
+    binaries=_webview_binaries + _pythonnet_binaries + _clr_binaries,
     datas=[
         ('app/templates', 'app/templates'),
         ('app/static', 'app/static'),
-    ] + _webview_datas + _clr_datas,
+    ] + _webview_datas + _pythonnet_datas + _clr_datas,
     hiddenimports=[
         'app.routes.delivery',
         'app.routes.contract',
@@ -31,8 +37,7 @@ a = Analysis(
         'app.engine.matcher',
         'app.engine.exceptions',
         'app.updater',
-        # pywebview + pythonnet + clr_loader
-    ] + _webview_hiddenimports + _clr_hiddenimports + [
+    ] + _webview_hiddenimports + _pythonnet_hiddenimports + _clr_hiddenimports + [
         'pythonnet',
         'clr',
     ],
@@ -55,7 +60,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='运费试算工具',
+    name='FreightCalculator',  # ASCII 名，避免 CI 编码乱码
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
