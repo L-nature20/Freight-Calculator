@@ -33,6 +33,23 @@ def main():
 
     # 2. PyInstaller package
     print('[Build] Packaging (1-3 minutes)...')
+
+    # 诊断：确认关键依赖已安装
+    import importlib
+    _check_pkgs = {
+        'webview': 'webview',
+        'pythonnet': 'clr',
+        'clr_loader': 'clr_loader',
+        'Flask': 'flask',
+        'SQLAlchemy': 'sqlalchemy',
+    }
+    for label, mod_name in _check_pkgs.items():
+        try:
+            mod = importlib.import_module(mod_name)
+            ver = getattr(mod, '__version__', getattr(mod, 'VERSION', 'unknown'))
+            print(f'  [OK] {label} == {ver}')
+        except ImportError:
+            print(f'  [MISSING] {label} — 未安装！')
     result = subprocess.run(
         ['pyinstaller', 'build.spec', '--clean', '-y', '--distpath', 'dist'],
         check=False,

@@ -76,25 +76,44 @@ try:
                 time.sleep(1)
 
             # 创建原生桌面窗口
-            import webview
+            _webview_ok = False
+            try:
+                import webview
 
-            class _Api:
-                """供前端 JS 调用的 Python 方法"""
-                def shutdown(self):
-                    window.destroy()
+                class _Api:
+                    """供前端 JS 调用的 Python 方法"""
+                    def shutdown(self):
+                        window.destroy()
 
-            window = webview.create_window(
-                '运费试算工具',
-                'http://127.0.0.1:5000',
-                width=1280,
-                height=800,
-                min_size=(800, 600),
-                js_api=_Api(),
-            )
-            webview.start()
+                window = webview.create_window(
+                    '运费试算工具',
+                    'http://127.0.0.1:5000',
+                    width=1280,
+                    height=800,
+                    min_size=(800, 600),
+                    js_api=_Api(),
+                )
+                _webview_ok = True
+                webview.start()
+            except Exception as e:
+                _log_error(f'pywebview 启动失败: {e}')
+                _show_error(
+                    '桌面窗口启动失败，已打开浏览器。\n\n'
+                    f'错误: {e}\n\n详见 exe 同目录 error.log'
+                )
+                webbrowser.open('http://127.0.0.1:5000')
 
-            # 窗口关闭后退出进程
-            os._exit(0)
+            # webview 模式：窗口关闭后退出
+            # fallback 模式：浏览器已打开，等待用户关闭
+            if _webview_ok:
+                os._exit(0)
+            else:
+                # 浏览器模式：保持进程运行直到用户手动关闭
+                try:
+                    input('按回车键退出应用...')
+                except EOFError:
+                    pass
+                os._exit(0)
 
         else:
             # ── 开发模式：浏览器方式 ──

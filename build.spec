@@ -2,17 +2,22 @@
 """PyInstaller 打包配置 — 运费试算工具
 用法: pyinstaller build.spec --clean -y
 """
+from PyInstaller.utils.hooks import collect_all
 
 block_cipher = None
+
+# 收集 pywebview + clr_loader 的全部文件（解决 CI 打包遗漏问题）
+_webview_datas, _webview_binaries, _webview_hiddenimports = collect_all('webview')
+_clr_datas, _clr_binaries, _clr_hiddenimports = collect_all('clr_loader')
 
 a = Analysis(
     ['run.py'],
     pathex=[],
-    binaries=[],
+    binaries=_webview_binaries + _clr_binaries,
     datas=[
         ('app/templates', 'app/templates'),
         ('app/static', 'app/static'),
-    ],
+    ] + _webview_datas + _clr_datas,
     hiddenimports=[
         'app.routes.delivery',
         'app.routes.contract',
@@ -26,11 +31,10 @@ a = Analysis(
         'app.engine.matcher',
         'app.engine.exceptions',
         'app.updater',
-        # pywebview
-        'webview',
-        'webview.platforms.edgechromium',
-        'clr_loader',
+        # pywebview + pythonnet + clr_loader
+    ] + _webview_hiddenimports + _clr_hiddenimports + [
         'pythonnet',
+        'clr',
     ],
     hookspath=[],
     hooksconfig={},
@@ -58,7 +62,7 @@ exe = EXE(
     upx=False,  # UPX 会导致启动崩溃
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # 无控制台窗口，原生桌面应用
+    console=True,  # 临时开启控制台，方便排查问题
     disable_windowed_traceback=False,
     target_arch=None,
     codesign_identity=None,
