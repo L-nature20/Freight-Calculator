@@ -28,6 +28,12 @@ jobs:
           python -c "import webview; print('webview OK:', webview.__file__)" || exit 1
           python -c "import clr; print('pythonnet OK:', clr.__file__)" || exit 1
 
+      - name: Install WebView2 Runtime
+        run: |
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile "$env:TEMP\MicrosoftEdgeWebview2Setup.exe"
+          Start-Process "$env:TEMP\MicrosoftEdgeWebview2Setup.exe" -ArgumentList "/silent /install" -Wait
+          Write-Output "WebView2 Runtime installed"
+
       - name: Build exe
         run: python build.py
 
