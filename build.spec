@@ -2,7 +2,6 @@
 """PyInstaller 打包配置 — 运费试算工具
 用法: pyinstaller build.spec --clean -y
 """
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 block_cipher = None
 
@@ -13,7 +12,7 @@ a = Analysis(
     datas=[
         ('app/templates', 'app/templates'),
         ('app/static', 'app/static'),
-    ] + collect_data_files('tkinter'),
+    ],
     hiddenimports=[
         'app.routes.delivery',
         'app.routes.contract',
@@ -27,7 +26,7 @@ a = Analysis(
         'app.engine.matcher',
         'app.engine.exceptions',
         'app.updater',
-    ] + collect_submodules('tkinter'),
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -51,10 +50,10 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=False,  # 临时关闭 UPX，排查 DLL 加载问题
+    upx=False,  # UPX 会导致启动崩溃
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # 有 splash 窗口，不需要控制台
+    console=True,  # 控制台窗口作为启动提示，关闭即退出
     disable_windowed_traceback=False,
     target_arch=None,
     codesign_identity=None,

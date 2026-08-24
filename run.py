@@ -2,6 +2,8 @@
 import os
 import sys
 import traceback
+import ctypes
+import threading
 
 # 错误日志路径：exe 同级目录
 if getattr(sys, 'frozen', False):
@@ -14,7 +16,6 @@ LOG_FILE = os.path.join(LOG_DIR, 'error.log')
 def _show_error(msg):
     """用 Windows 弹窗显示错误"""
     try:
-        import ctypes
         ctypes.windll.user32.MessageBoxW(0, msg, '运费试算工具 - 启动失败', 0x10)
     except Exception:
         pass
@@ -31,48 +32,29 @@ def _log_error(exc):
 
 try:
     import webbrowser
-    import threading
+    import time
     from app import create_app
 
     app = create_app()
 
     if __name__ == '__main__':
-        splash = None
-
         def open_browser():
-            """启动后自动打开浏览器，关闭 splash 窗口"""
+            """1.5秒后自动打开浏览器"""
+            time.sleep(1.5)
             webbrowser.open('http://127.0.0.1:5000')
-            if splash is not None:
-                splash.destroy()
 
         if getattr(sys, 'frozen', False):
-            # 打包模式：显示 Tkinter splash 窗口
-            import tkinter as tk
-            splash = tk.Tk()
-            splash.title('运费试算工具')
-            splash.geometry('300x120')
-            splash.resizable(False, False)
-            # 居中显示
-            splash.update_idletasks()
-            w, h = 300, 120
-            x = (splash.winfo_screenwidth() - w) // 2
-            y = (splash.winfo_screenheight() - h) // 2
-            splash.geometry(f'{w}x{h}+{x}+{y}')
-            tk.Label(splash, text='运费试算工具', font=('Microsoft YaHei', 14)).pack(pady=15)
-            tk.Label(splash, text='正在启动，请稍候...', font=('Microsoft YaHei', 9), fg='gray').pack()
-
-            def on_ready():
-                webbrowser.open('http://127.0.0.1:5000')
-                splash.destroy()
-
-            splash.after(1500, on_ready)
-
-            # Flask 放后台线程，主线程运行 tkinter 事件循环
-            t = threading.Thread(target=lambda: app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False), daemon=True)
-            t.start()
-            splash.mainloop()
+            # 打包模式：控制台窗口作为启动提示
+            threading.Thread(target=open_browser, daemon=True).start()
+            print('  运费试算工具 v1.0.0')
+            print('  访问地址: http://127.0.0.1:5000')
+            print('  浏览器将自动打开...')
+            print()
+            print('  关闭此窗口即可退出应用')
+            print('=' * 40)
+            app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
         else:
-            threading.Timer(1.5, open_browser).start()
+            threading.Thread(target=open_browser, daemon=True).start()
             print('=' * 50)
             print('  运费试算工具已启动')
             print('  访问地址: http://127.0.0.1:5000')
