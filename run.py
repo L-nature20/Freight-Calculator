@@ -60,8 +60,17 @@ try:
             splash.geometry(f'{w}x{h}+{x}+{y}')
             tk.Label(splash, text='运费试算工具', font=('Microsoft YaHei', 14)).pack(pady=15)
             tk.Label(splash, text='正在启动，请稍候...', font=('Microsoft YaHei', 9), fg='gray').pack()
-            splash.after(1500, open_browser)
-            app.run(host='127.0.0.1', port=5000, debug=False)
+
+            def on_ready():
+                webbrowser.open('http://127.0.0.1:5000')
+                splash.destroy()
+
+            splash.after(1500, on_ready)
+
+            # Flask 放后台线程，主线程运行 tkinter 事件循环
+            t = threading.Thread(target=lambda: app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False), daemon=True)
+            t.start()
+            splash.mainloop()
         else:
             threading.Timer(1.5, open_browser).start()
             print('=' * 50)
