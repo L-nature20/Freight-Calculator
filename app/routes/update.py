@@ -58,4 +58,14 @@ del "%~f0"
         creationflags=subprocess.CREATE_NO_WINDOW,
     )
 
-    return jsonify({'success': True, 'message': '更新已就绪，程序将自动重启'})
+    resp = jsonify({'success': True, 'message': '下载完成，程序即将重启...'})
+
+    # 延迟退出：给 Flask 时间返回响应，然后退出释放 exe 锁
+    def _exit():
+        import time
+        time.sleep(0.5)
+        os._exit(0)
+    import threading
+    threading.Thread(target=_exit, daemon=True).start()
+
+    return resp
