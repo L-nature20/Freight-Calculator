@@ -43,7 +43,7 @@ def api_apply():
     # 创建替换脚本（Windows bat）
     current_exe = sys.executable
     bat_path = os.path.join(os.path.dirname(current_exe), '_update.bat')
-    with open(bat_path, 'w', encoding='utf-8') as f:
+    with open(bat_path, 'w', encoding='gbk') as f:
         f.write(f'''@echo off
 timeout /t 2 /nobreak >nul
 del "{current_exe}"
@@ -55,7 +55,7 @@ del "%~dp0_update.vbs"
 
     # 创建 VBS 脚本（隐藏窗口运行 bat）
     vbs_path = os.path.join(os.path.dirname(current_exe), '_update.vbs')
-    with open(vbs_path, 'w', encoding='utf-8') as f:
+    with open(vbs_path, 'w', encoding='gbk') as f:
         f.write(f'CreateObject("WScript.Shell").Run "{bat_path}", 0, True')
 
     # 通过 VBS 以隐藏窗口方式启动 bat 脚本
