@@ -28,59 +28,65 @@ def reset_check_cache():
 
 def check_update():
     """检查 GitHub Releases 是否有新版本。
+    优先 GitHub 原始 API，失败再走代理。
     返回 (has_update, remote_version, download_url, release_notes)
     """
     if _update_cache['checked']:
         return (_update_cache['has_update'], _update_cache['version'],
                 _update_cache['url'], _update_cache['raw_url'], _update_cache['notes'])
 
-    api_url = GITHUB_PROXY + GITHUB_API if GITHUB_PROXY else GITHUB_API
+    # 优先 GitHub 原始 API，失败再走代理
+    api_urls = [GITHUB_API]
+    if GITHUB_PROXY:
+        api_urls.append(GITHUB_PROXY + GITHUB_API)
+
     max_retries = 3
 
-    for attempt in range(max_retries):
-        try:
-            resp = requests.get(api_url, timeout=15)
-            if resp.status_code != 200:
+    for api_url in api_urls:
+        for attempt in range(max_retries):
+            try:
+                resp = requests.get(api_url, timeout=15)
+                if resp.status_code != 200:
+                    if attempt < max_retries - 1:
+                        time.sleep(3)
+                        continue
+                    break  # 尝试下一个 URL
+
+                data = resp.json()
+                remote_ver = data.get('tag_name', '').lstrip('v')
+                if not remote_ver or remote_ver == __version__:
+                    _update_cache['checked'] = True
+                    return False, None, None, None, None
+
+                # 找到 exe 下载链接
+                download_url = None
+                raw_url = None
+                for asset in data.get('assets', []):
+                    if asset['name'].endswith('.exe'):
+                        raw_url = asset['browser_download_url']
+                        # 使用代理加速（如果配置了）
+                        download_url = GITHUB_PROXY + raw_url if GITHUB_PROXY else raw_url
+                        break
+
+                if download_url:
+                    _update_cache.update({
+                        'checked': True,
+                        'has_update': True,
+                        'version': remote_ver,
+                        'url': download_url,
+                        'raw_url': raw_url,
+                        'notes': data.get('body', ''),
+                    })
+                    return True, remote_ver, download_url, raw_url, data.get('body', '')
+
+                _update_cache['checked'] = True
+                return False, None, None, None, None
+
+            except Exception:
                 if attempt < max_retries - 1:
                     time.sleep(3)
                     continue
-                _update_cache['checked'] = True
-                return False, None, None, None, None
-
-            data = resp.json()
-            remote_ver = data.get('tag_name', '').lstrip('v')
-            if not remote_ver or remote_ver == __version__:
-                _update_cache['checked'] = True
-                return False, None, None, None, None
-
-            # 找到 exe 下载链接
-            download_url = None
-            raw_url = None
-            for asset in data.get('assets', []):
-                if asset['name'].endswith('.exe'):
-                    raw_url = asset['browser_download_url']
-                    # 使用代理加速（如果配置了）
-                    download_url = GITHUB_PROXY + raw_url if GITHUB_PROXY else raw_url
-                    break
-
-            if download_url:
-                _update_cache.update({
-                    'checked': True,
-                    'has_update': True,
-                    'version': remote_ver,
-                    'url': download_url,
-                    'raw_url': raw_url,
-                    'notes': data.get('body', ''),
-                })
-                return True, remote_ver, download_url, raw_url, data.get('body', '')
-
-            _update_cache['checked'] = True
-            return False, None, None, None, None
-
-        except Exception:
-            if attempt < max_retries - 1:
-                time.sleep(3)
-                continue
+                break  # 尝试下一个 URL
 
     _update_cache['checked'] = True
     return False, None, None, None, None
