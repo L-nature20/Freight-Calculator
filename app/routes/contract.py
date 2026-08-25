@@ -6,6 +6,7 @@ from ..services.excel_io import (
     import_contracts, import_rates,
     create_contract_template, create_rate_template
 )
+from ..services.contract_status import check_contract_status
 
 bp = Blueprint('contract', __name__)
 
@@ -300,6 +301,9 @@ def import_contracts_data():
         return jsonify({'error': '仅支持 .xlsx 格式'}), 400
 
     success, errors = import_contracts(file.stream)
+    # 导入成功后立即触发状态规则，使符合条件的合同自动变为"生效"
+    if success:
+        check_contract_status()
     return jsonify({
         'success': success,
         'errors': errors,
