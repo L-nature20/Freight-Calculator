@@ -7,6 +7,8 @@ import threading
 import time
 import traceback
 import webbrowser
+import urllib.request
+import subprocess
 
 # 错误日志路径：exe 同级目录
 if getattr(sys, 'frozen', False):
@@ -80,10 +82,55 @@ try:
             try:
                 import webview
 
+                def _download_handler(url):
+                    """pywebview 下载处理：弹另存为对话框让用户选择保存位置"""
+                    try:
+                        resp = urllib.request.urlopen(urllib.request.Request(url))
+                        data = resp.read()
+                        cd = resp.headers.get('Content-Disposition', '')
+                        filename = 'download.xlsx'
+                        if 'filename=' in cd:
+                            filename = cd.split('filename=')[1].strip('"\' ')
+                        save_path = window.create_file_dialog(
+                            webview.SAVE_DIALOG,
+                            directory=os.path.join(os.path.expanduser('~'), 'Downloads'),
+                            save_filename=filename,
+                        )
+                        if not save_path:
+                            return None
+                        filepath = save_path if isinstance(save_path, str) else save_path[0]
+                        with open(filepath, 'wb') as f:
+                            f.write(data)
+                        subprocess.Popen(['explorer', '/select,', filepath])
+                        return filepath
+                    except Exception:
+                        return None
+
                 class _Api:
                     """供前端 JS 调用的 Python 方法"""
                     def shutdown(self):
                         window.destroy()
+
+                    def save_file(self, data_url, filename):
+                        """前端传入 data URL，弹另存为对话框后保存到用户选择的位置"""
+                        try:
+                            import base64
+                            _, encoded = data_url.split(',', 1)
+                            raw = base64.b64decode(encoded)
+                            save_path = window.create_file_dialog(
+                                webview.SAVE_DIALOG,
+                                directory=os.path.join(os.path.expanduser('~'), 'Downloads'),
+                                save_filename=filename,
+                            )
+                            if not save_path:
+                                return None
+                            filepath = save_path if isinstance(save_path, str) else save_path[0]
+                            with open(filepath, 'wb') as f:
+                                f.write(raw)
+                            subprocess.Popen(['explorer', '/select,', filepath])
+                            return filepath
+                        except Exception:
+                            return None
 
                 window = webview.create_window(
                     '运费试算工具',
@@ -94,7 +141,7 @@ try:
                     js_api=_Api(),
                 )
                 _webview_ok = True
-                webview.start()
+                webview.start(download_handler=_download_handler)
             except Exception as e:
                 _log_error(f'pywebview 启动失败: {e}')
                 _show_error(

@@ -273,13 +273,24 @@ const Trial = {
             });
             if (!resp.ok) { showMsg('导出失败', 'danger'); return; }
             const blob = await resp.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = '运费试算结果.xlsx';
-            a.click();
-            URL.revokeObjectURL(url);
-            showMsg('导出成功', 'success');
+            if (window.pywebview && window.pywebview.api) {
+                // pywebview 模式：通过 Python API 弹另存为对话框
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const result = await window.pywebview.api.save_file(reader.result, '运费试算结果.xlsx');
+                    showMsg(result ? '导出成功，已打开文件所在目录' : '导出取消或失败', result ? 'success' : 'warning');
+                };
+                reader.readAsDataURL(blob);
+            } else {
+                // 浏览器模式：原有 blob 下载逻辑
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '运费试算结果.xlsx';
+                a.click();
+                URL.revokeObjectURL(url);
+                showMsg('导出成功', 'success');
+            }
         } finally {
             if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-download"></i> 导出'; }
         }
