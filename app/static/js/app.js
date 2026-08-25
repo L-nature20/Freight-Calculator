@@ -175,10 +175,7 @@ const Update = {
         document.getElementById('update-version').textContent = 'v' + this._data.version;
         const notes = this._data.notes || '';
         document.getElementById('update-notes').innerHTML = notes ? notes.replace(/\n/g, '<br>') : '无更新说明';
-        document.getElementById('update-progress').style.display = 'none';
-        document.getElementById('update-btn').disabled = false;
-        document.getElementById('update-btn').innerHTML = '<i class="bi bi-download"></i> 立即更新';
-        // 手动下载按钮
+        // 手动下载按钮：有 raw_url 则显示
         const manualBtn = document.getElementById('manual-download-btn');
         if (this._data.raw_url) {
             manualBtn.href = this._data.raw_url;
