@@ -40,7 +40,7 @@ def api_apply():
     if error:
         return jsonify({'success': False, 'error': error})
 
-    # 创建替换脚本（Windows bat）
+    # 创建替换脚本（Windows bat，GBK 编码避免中文路径乱码）
     current_exe = sys.executable
     bat_path = os.path.join(os.path.dirname(current_exe), '_update.bat')
     with open(bat_path, 'w', encoding='gbk') as f:
@@ -50,16 +50,13 @@ del "{current_exe}"
 rename "{new_exe}" "{os.path.basename(current_exe)}"
 start "" "{current_exe}"
 del "%~f0"
-del "%~dp0_update.vbs"
 ''')
 
-    # 创建 VBS 脚本（隐藏窗口运行 bat）
-    vbs_path = os.path.join(os.path.dirname(current_exe), '_update.vbs')
-    with open(vbs_path, 'w', encoding='gbk') as f:
-        f.write(f'CreateObject("WScript.Shell").Run "{bat_path}", 0, True')
-
-    # 通过 VBS 以隐藏窗口方式启动 bat 脚本
-    subprocess.Popen(['wscript.exe', vbs_path])
+    # 直接用 cmd.exe 执行 bat，DETACHED_PROCESS 使 bat 独立运行
+    subprocess.Popen(
+        ['cmd.exe', '/c', bat_path],
+        creationflags=subprocess.DETACHED_PROCESS,
+    )
 
     resp = jsonify({'success': True, 'message': '下载完成，程序即将重启...'})
 
